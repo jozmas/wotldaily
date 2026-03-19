@@ -1,7 +1,16 @@
-# wotldaily
-📖 WOTLdaily - Daily Scripture & Gospel
+📖 WOTLdaily - GitHub Integration Bridge
 
-Welcome to the official repository of WOTLdaily. This project is dedicated to providing daily spiritual nourishment through the Holy Gospel and Responsorial Psalms, integrated with a clean, modern, and meditative user interface.
+Welcome to the official GitHub repository of WOTLdaily. This repository serves as a central integration point and data bridge for the main WOTL project hosted on external infrastructure.
+
+🔗 Project Role & Purpose
+
+This GitHub repository is not just a standalone site; it functions as the primary connector for:
+
+Centralized Asset Hosting: Providing a stable environment for scripts and logic used across different hosting platforms.
+
+API Integration: Hosting the bridge logic that connects the main WOTL website to liturgical data providers like Universalis and the Catholic Readings API.
+
+Cross-Platform Delivery: Ensuring that the daily Word of God is consistently formatted and delivered regardless of where the end-user accesses the site.
 
 ✨ Features
 
@@ -31,7 +40,7 @@ Catholic Readings API - For liturgical calendar data.
 
 Icons: Font Awesome & Lucide-React.
 
-Hosting: GitHub Pages.
+Hosting: GitHub Pages (serving as the integration host).
 
 🛠️ Installation & Deployment
 
@@ -40,9 +49,9 @@ Clone the repository:
 git clone [https://github.com/YOUR-USERNAME/wotldaily.git](https://github.com/YOUR-USERNAME/wotldaily.git)
 
 
-Open index.html in your browser to view the site locally.
+Integration: Use the raw file links or GitHub Pages URL to link this logic to your main WOTL hosting environment.
 
-Deployment: Simply push the code to a GitHub repository and enable GitHub Pages in the repository settings.
+Deployment: Simply push the code to this repository and ensure GitHub Pages is enabled to maintain the connection.
 
 📱 Connect with Us
 
