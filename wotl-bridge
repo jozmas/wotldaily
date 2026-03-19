@@ -1,0 +1,80 @@
+/**
+ * WOTLdaily - Gospel Bridge Engine
+ * Tento skript slúži ako automatická spojka pre načítavanie denného evanjelia.
+ * Zdroj dát: Universalis API (Liturgický kalendár) & Bible API (Texty)
+ */
+
+async function loadDailyGospel() {
+    const gospelContainer = document.getElementById('gospel-content');
+    const dateContainer = document.getElementById('gospel-date');
+    const audioControls = document.getElementById('audio-controls');
+
+    if (!gospelContainer) return;
+
+    // 1. Nastavenie dátumu v slovenskom formáte
+    const dnes = new Date();
+    if (dateContainer) {
+        dateContainer.innerText = dnes.toLocaleDateString('sk-SK', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
+    }
+
+    try {
+        // 2. Načítanie dát z Universalis (vždy aktuálne pre daný deň)
+        // Používame JSON formát, ktorý je stabilný
+        const response = await fetch('https://www.universalis.com/Gospel.json');
+        if (!response.ok) throw new Error("Nepodarilo sa pripojiť k zdroju dát.");
+        
+        const data = await response.json();
+
+        if (data && data.text) {
+            // Vyčistíme HTML z API a pripravíme ho pre náš web
+            gospelContainer.innerHTML = `
+                <div class="prose-custom animate-fade-in">
+                    <div class="text-bible-gold font-bold mb-4 uppercase tracking-widest text-sm">
+                        ${data.copyright?.source || 'Sväté Evanjelium'}
+                    </div>
+                    <div class="gospel-body text-gray-300 leading-relaxed text-lg italic">
+                        ${data.text}
+                    </div>
+                </div>
+            `;
+            
+            // Aktivujeme audio ovládanie, ak existuje
+            if (audioControls) audioControls.classList.remove('hidden');
+
+            // Nastavenie Text-to-Speech (Slovenčina)
+            const readBtn = document.getElementById('readGospelBtn');
+            if (readBtn) {
+                readBtn.onclick = () => {
+                    window.speechSynthesis.cancel();
+                    // Odstránime HTML značky pre čisté čítanie
+                    const plainText = gospelContainer.innerText;
+                    const utterance = new SpeechSynthesisUtterance(plainText);
+                    utterance.lang = 'sk-SK';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                };
+            }
+        }
+    } catch (error) {
+        console.error("WOTL Error:", error);
+        gospelContainer.innerHTML = `
+            <div class="text-center p-10 border border-dashed border-white/10 rounded-2xl">
+                <p class="text-gray-500">Momentálne nie je možné načítať evanjelium. Prosím, skúste to neskôr alebo navštívte náš YouTube kanál.</p>
+            </div>
+        `;
+    }
+}
+
+// Spustenie pri načítaní okna
+window.addEventListener('DOMContentLoaded', loadDailyGospel);
+
+// Funkcia pre zastavenie čítania
+const stopBtn = document.getElementById('stopGospelBtn');
+if (stopBtn) {
+    stopBtn.onclick = () => window.speechSynthesis.cancel();
+}
