@@ -1,7 +1,7 @@
 /**
  * WOTLdaily - Gospel Bridge Engine (Stable Version)
- * Táto verzia nepoužíva Universalis (kvôli CORS chybám), 
- * ale kombinuje Catholic Readings API a Bible API.
+ * This script acts as a stable bridge for fetching daily liturgical readings.
+ * It combines the Catholic Readings API (for references) and the Bible API (for text).
  */
 
 async function loadDailyGospel() {
@@ -11,7 +11,7 @@ async function loadDailyGospel() {
 
     if (!gospelContainer) return;
 
-    // 1. Nastavenie dátumu (Anglicky)
+    // 1. Set Date (English format)
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -24,26 +24,26 @@ async function loadDailyGospel() {
     }
 
     try {
-        // 2. Získanie referencie evanjelia z Catholic Readings API
-        // Toto API je verejné a dostupné pre JS
+        // 2. Fetch Gospel reference from Catholic Readings API
+        // This API is public and CORS-friendly for GitHub/External hosting
         const litResponse = await fetch(`https://cpbjr.github.io/catholic-readings-api/readings/${y}/${m}-${d}.json`);
         if (!litResponse.ok) throw new Error("Liturgical API unavailable");
         
         const litData = await litResponse.json();
         
-        // Hľadáme evanjelium v poli čítaní
+        // Find the Gospel entry in the readings array
         const gospelReading = litData.readings.find(r => r.type === 'gospel');
         if (!gospelReading) throw new Error("Gospel reference not found for today");
 
         const reference = gospelReading.reference;
 
-        // 3. Získanie samotného textu z Bible API (KJV translation)
+        // 3. Fetch the actual Scripture text from Bible API (KJV translation)
         const bibleResponse = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}?translation=kjv`);
         if (!bibleResponse.ok) throw new Error("Bible API unavailable");
         
         const bibleData = await bibleResponse.json();
 
-        // 4. Zobrazenie na stránke
+        // 4. Update UI with the retrieved Word
         gospelContainer.innerHTML = `
             <div class="prose-custom animate-fade-in text-center md:text-left">
                 <h3 class="font-serif text-2xl text-white mb-6 underline decoration-bible-gold/30 underline-offset-8">
@@ -58,7 +58,7 @@ async function loadDailyGospel() {
             </div>
         `;
         
-        // Audio nastavenia
+        // Enable Audio Controls
         if (audioControls) audioControls.classList.remove('hidden');
         setupAudio(bibleData.text);
 
@@ -75,6 +75,10 @@ async function loadDailyGospel() {
     }
 }
 
+/**
+ * Handles Text-to-Speech configuration for the Gospel text.
+ * @param {string} textToRead - The plain text to be spoken.
+ */
 function setupAudio(textToRead) {
     const readBtn = document.getElementById('readGospelBtn');
     const stopBtn = document.getElementById('stopGospelBtn');
@@ -84,12 +88,14 @@ function setupAudio(textToRead) {
         readBtn.onclick = () => {
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(textToRead);
-            utterance.lang = 'en-US'; // Anglický hlas
+            utterance.lang = 'en-US'; // English voice
             utterance.rate = 0.9;
             
-            // Výber hlasu
+            // Voice selection logic
             const voices = synth.getVoices();
-            const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) || voices.find(v => v.lang.startsWith('en'));
+            const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) || 
+                                   voices.find(v => v.lang.startsWith('en'));
+            
             if (preferredVoice) utterance.voice = preferredVoice;
 
             synth.speak(utterance);
@@ -101,7 +107,8 @@ function setupAudio(textToRead) {
     }
 }
 
-// Spustenie
+// Initialization
 window.addEventListener('DOMContentLoaded', loadDailyGospel);
-// Niektoré prehliadače potrebujú voice list až po loadnutí
+
+// Some browsers require an event listener to populate the voice list
 window.speechSynthesis.onvoiceschanged = () => {};
