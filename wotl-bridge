@@ -1,9 +1,7 @@
-/**
- * WOTLdaily - Content Bridge Engine
- * PURPOSE:
- * This script fetches daily liturgical readings (Gospel & Psalm) in English.
- * It injects the content into the main website at wotl.infinityfree.me.
- * TTS functionality is handled by the host website.
+**
+ * WOTLdaily - Custom Content Bridge Engine
+ * This script fetches daily readings (Gospel and Psalm) in English.
+ * Designed to connect with wotl.infinityfree.me.
  */
 
 async function loadDailyContent() {
@@ -11,12 +9,13 @@ async function loadDailyContent() {
     const psalmContainer = document.getElementById('psalm-content');
     const dateContainer = document.getElementById('gospel-date');
 
-    // 1. Set Global Date (English)
+    // 1. Set current date
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
 
+    // Display date in English format
     if (dateContainer) {
         dateContainer.innerText = today.toLocaleDateString('en-US', { 
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
@@ -24,7 +23,7 @@ async function loadDailyContent() {
     }
 
     try {
-        // 2. Fetch Liturgical Reference
+        // 2. Fetch Liturgical References
         const litResponse = await fetch(`https://cpbjr.github.io/catholic-readings-api/readings/${y}/${m}-${d}.json`);
         if (!litResponse.ok) throw new Error("Liturgical API unreachable");
         
@@ -37,7 +36,10 @@ async function loadDailyContent() {
         }
 
         // 4. Process Psalm
-        const psalmRef = litData.readings.find(r => r.type === 'psalm')?.reference || litData.readings.responsorial_psalm;
+        const psalmRef = litData.readings.find(r => r.type === 'psalm')?.reference || 
+                         litData.readings.responsorial_psalm || 
+                         litData.readings.psalm;
+                         
         if (psalmRef && psalmContainer) {
             await injectScripture(psalmRef, psalmContainer, 'Responsorial Psalm');
         }
@@ -48,29 +50,41 @@ async function loadDailyContent() {
 }
 
 /**
- * Fetches text from Bible API and injects it into a target element
+ * Fetches text from Bible API and injects it into the HTML
  */
 async function injectScripture(reference, container, label) {
     try {
+        // Clean reference (remove text in parentheses for better API compatibility)
         const cleanRef = reference.split('(')[0].trim();
+        
+        // Call Bible API (KJV translation)
         const response = await fetch(`https://bible-api.com/${encodeURIComponent(cleanRef)}?translation=kjv`);
-        if (!response.ok) return;
+        if (!response.ok) {
+            container.innerHTML = `<p class="text-center text-gray-500 opacity-50 italic">${reference} (Text currently unavailable)</p>`;
+            return;
+        }
         
         const data = await response.json();
         
+        // Inject formatted content into the website
         container.innerHTML = `
             <div class="animate-fade-in">
-                <h3 class="font-serif text-xl text-bible-gold mb-2 uppercase tracking-widest">${label}</h3>
-                <h4 class="text-white font-bold mb-4 text-lg">${reference}</h4>
-                <div class="text-gray-300 italic leading-relaxed">
+                <h3 class="font-sans text-xs text-bible-gold mb-2 uppercase tracking-[0.2em] font-bold">${label}</h3>
+                <h4 class="text-white font-bold mb-4 text-xl">${reference}</h4>
+                <div class="text-gray-300 italic leading-relaxed border-l-2 border-bible-gold/30 pl-4 text-lg">
                     "${data.text.trim()}"
                 </div>
             </div>
         `;
     } catch (e) {
         console.error(`Error injecting ${label}:`, e);
+        container.innerHTML = `<p class="text-center text-red-400 text-xs uppercase">Error loading scripture</p>`;
     }
 }
 
-// Initialize on load
-window.addEventListener('DOMContentLoaded', loadDailyContent);
+// Start script when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDailyContent);
+} else {
+    loadDailyContent();
+}
