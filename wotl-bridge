@@ -1,21 +1,22 @@
 /**
  * WOTLdaily - Custom Content Bridge Engine
- * This script fetches daily readings (Gospel and Psalm) in English.
- * Designed to connect with wotl.infinityfree.me.
+ * Updated to match catholic-readings-api data structure.
+ * Fetches readings from cpbjr API and scripture text from bible-api.com.
  */
 
 async function loadDailyContent() {
     const gospelContainer = document.getElementById('gospel-content');
     const psalmContainer = document.getElementById('psalm-content');
+    const firstReadingContainer = document.getElementById('first-reading-content');
     const dateContainer = document.getElementById('gospel-date');
 
-    // 1. Set current date
+    // 1. Get current date components for URL building
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
 
-    // Display date in English format
+    // Display formatted date for the UI
     if (dateContainer) {
         dateContainer.innerText = today.toLocaleDateString('en-US', { 
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
@@ -23,25 +24,36 @@ async function loadDailyContent() {
     }
 
     try {
-        // 2. Fetch Liturgical References
-        const litResponse = await fetch(`https://cpbjr.github.io/catholic-readings-api/readings/${y}/${m}-${d}.json`);
-        if (!litResponse.ok) throw new Error("Liturgical API unreachable");
+        /**
+         * 2. Fetch Liturgical Data
+         * We fetch from the source API. To make your GitHub match this, 
+         * you would save this resulting JSON to your repo at:
+         * https://raw.githubusercontent.com/jozmas/wotldaily/main/readings/${y}/${m}-${d}.json
+         */
+        const apiUrl = `https://cpbjr.github.io/catholic-readings-api/readings/${y}/${m}-${d}.json`;
+        const response = await fetch(apiUrl);
         
-        const litData = await litResponse.json();
+        if (!response.ok) throw new Error("Reading API unreachable");
         
-        // 3. Process Gospel
-        const gospelEntry = litData.readings.find(r => r.type === 'gospel');
-        if (gospelEntry && gospelContainer) {
-            await injectScripture(gospelEntry.reference, gospelContainer, 'Holy Gospel');
+        const data = await response.json();
+        const readings = data.readings || [];
+
+        // 3. Process First Reading (if exists)
+        const firstReading = readings.find(r => r.type === 'reading_1' || r.type === 'first_reading');
+        if (firstReading && firstReadingContainer) {
+            await injectScripture(firstReading.reference, firstReadingContainer, 'First Reading');
         }
 
         // 4. Process Psalm
-        const psalmRef = litData.readings.find(r => r.type === 'psalm')?.reference || 
-                         litData.readings.responsorial_psalm || 
-                         litData.readings.psalm;
-                         
-        if (psalmRef && psalmContainer) {
-            await injectScripture(psalmRef, psalmContainer, 'Responsorial Psalm');
+        const psalmReading = readings.find(r => r.type === 'psalm' || r.type === 'responsorial_psalm');
+        if (psalmReading && psalmContainer) {
+            await injectScripture(psalmReading.reference, psalmContainer, 'Responsorial Psalm');
+        }
+
+        // 5. Process Gospel
+        const gospelReading = readings.find(r => r.type === 'gospel');
+        if (gospelReading && gospelContainer) {
+            await injectScripture(gospelReading.reference, gospelContainer, 'Holy Gospel');
         }
 
     } catch (error) {
@@ -50,39 +62,51 @@ async function loadDailyContent() {
 }
 
 /**
- * Fetches text from Bible API and injects it into the HTML
+ * Fetches text from Bible API (KJV) and injects it into the designated container
  */
 async function injectScripture(reference, container, label) {
+    if (!reference || !container) return;
+
     try {
-        // Clean reference (remove text in parentheses for better API compatibility)
+        // Clean the reference (e.g., "John 3:16-17 (Short form)" -> "John 3:16-17")
         const cleanRef = reference.split('(')[0].trim();
         
-        // Call Bible API (KJV translation)
-        const response = await fetch(`https://bible-api.com/${encodeURIComponent(cleanRef)}?translation=kjv`);
+        // Fetch from Bible API
+        const bibleUrl = `https://bible-api.com/${encodeURIComponent(cleanRef)}?translation=kjv`;
+        const response = await fetch(bibleUrl);
+        
         if (!response.ok) {
-            container.innerHTML = `<p class="text-center text-gray-500 opacity-50 italic">${reference} (Text currently unavailable)</p>`;
+            container.innerHTML = `
+                <div class="p-4 border border-dashed border-gray-600 rounded">
+                    <p class="text-bible-gold text-xs uppercase mb-1">${label}</p>
+                    <p class="text-white font-medium">${reference}</p>
+                    <p class="text-gray-500 italic text-sm mt-2">Scripture text currently unavailable.</p>
+                </div>`;
             return;
         }
-        
+
         const data = await response.json();
         
-        // Inject formatted content into the website
+        // Inject the formatted HTML
         container.innerHTML = `
-            <div class="animate-fade-in">
-                <h3 class="font-sans text-xs text-bible-gold mb-2 uppercase tracking-[0.2em] font-bold">${label}</h3>
-                <h4 class="text-white font-bold mb-4 text-xl">${reference}</h4>
-                <div class="text-gray-300 italic leading-relaxed border-l-2 border-bible-gold/30 pl-4 text-lg">
-                    "${data.text.trim()}"
+            <div class="animate-fade-in mb-8">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="h-px w-8 bg-bible-gold/50"></span>
+                    <h3 class="font-sans text-[10px] text-bible-gold uppercase tracking-[0.3em] font-bold">${label}</h3>
+                </div>
+                <h4 class="text-white font-serif italic mb-4 text-2xl">${reference}</h4>
+                <div class="text-gray-300 leading-relaxed border-l-2 border-bible-gold/20 pl-6 text-lg font-light">
+                    ${data.text.trim().replace(/\n/g, '<br>')}
                 </div>
             </div>
         `;
     } catch (e) {
-        console.error(`Error injecting ${label}:`, e);
-        container.innerHTML = `<p class="text-center text-red-400 text-xs uppercase">Error loading scripture</p>`;
+        console.error(`Error loading ${label}:`, e);
+        container.innerHTML = `<p class="text-red-400 text-xs">Error loading scripture text.</p>`;
     }
 }
 
-// Start script when DOM is ready
+// Initialize on load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadDailyContent);
 } else {
