@@ -1,65 +1,72 @@
 📖 WOTLdaily - GitHub Integration Bridge
 
-Welcome to the official GitHub repository of WOTLdaily. This repository serves as a central integration point and data bridge for the main WOTL project hosted on external infrastructure.
+Welcome to the official GitHub repository of WOTLdaily. This repository serves as the central integration hub and data bridge for the main WOTL project hosted on your external infrastructure.
 
 🔗 Project Role & Purpose
 
-This GitHub repository is not just a standalone site; it functions as the primary connector for:
+This repository functions as the primary connector for the WOTL ecosystem:
 
-Centralized Asset Hosting: Providing a stable environment for scripts and logic used across different hosting platforms.
+Centralized Logic Hosting: It hosts the logic.js file, ensuring that all script updates happen in one place and sync across all platforms.
 
-API Integration: Hosting the bridge logic that connects the main WOTL website to liturgical data providers like Universalis and the Catholic Readings API.
+API Data Bridge: The logic here connects your website to the Catholic Readings API (for liturgical references) and Bible-API.com (for full KJV scripture texts).
 
-Cross-Platform Delivery: Ensuring that the daily Word of God is consistently formatted and delivered regardless of where the end-user accesses the site.
+Cross-Platform Delivery: It ensures that the "Daily Bread" is consistently formatted and delivered, whether accessed via a browser or a mobile view.
 
-✨ Features
+⚙️ Technical Integration (The Bridge)
 
-Daily Gospel: Automatically fetches the liturgical Gospel reading for the current date.
+To use this repository as the source for your website, reference the JavaScript directly from your GitHub Pages or a CDN:
 
-Audio Experience: Built-in Text-to-Speech (TTS) engine to listen to the daily Word.
+1. Direct Script Injection
 
-Responsorial Psalms: Dedicated section for daily Psalms to complement the readings.
+Include the bridge in your HTML by referencing your logic.js file:
 
-Jesus' Miracles: A curated list of the 37 miracles performed by Jesus Christ.
+<!-- Load the Gospel & Psalm logic from your GitHub -->
+<script src="[https://your-username.github.io/wotldaily/logic.js](https://your-username.github.io/wotldaily/logic.js)"></script>
 
-Modern UI: Responsive design using Tailwind CSS with a "Glassmorphism" aesthetic.
 
-Global Reach: Social sharing integration (Facebook, X, WhatsApp) to spread the Word.
+2. Implementation Target
+
+The logic.js file automatically detects and populates the following elements on your site:
+
+gospel-date: Displays the current date in English.
+
+gospel-content: Injects the daily Gospel reference and text.
+
+psalm-content: Injects the daily Responsorial Psalm reference and text.
+
+✨ Key Features
+
+Daily Liturgy: Automatically synchronized with the Catholic liturgical calendar.
+
+KJV Translation: Provides the classic King James Version for English-speaking users.
+
+Responsive Injection: Content is injected with smooth fade-in animations and Tailwind CSS styling.
+
+Fail-safe Logic: Includes error handling for cases where API data might be temporarily unavailable.
 
 🚀 Technologies Used
 
-Frontend: HTML5, CSS3 (Tailwind CSS)
+Logic: Vanilla JavaScript (ES6+ Async/Await)
 
-Frameworks: React (available in App.jsx version)
+Data Sources:
 
-APIs: - Universalis API - For liturgical Gospel texts.
+Catholic Readings API - Liturgical calendar data.
 
-Bible-API.com - For specific scripture references (KJV).
+Bible-API.com - Real-time KJV scripture retrieval.
 
-Catholic Readings API - For liturgical calendar data.
+Frontend Integration: Tailwind CSS & Font Awesome.
 
-Icons: Font Awesome & Lucide-React.
+Hosting: GitHub Pages (serving as the logic provider).
 
-Hosting: GitHub Pages (serving as the integration host).
+🛠️ How to Maintain
 
-🛠️ Installation & Deployment
+Edit logic.js: Any changes made to the logic here will immediately reflect on wotl.infinityfree.me.
 
-Clone the repository:
-
-git clone [https://github.com/YOUR-USERNAME/wotldaily.git](https://github.com/YOUR-USERNAME/wotldaily.git)
-
-
-Integration: Use the raw file links or GitHub Pages URL to link this logic to your main WOTL hosting environment.
-
-Deployment: Simply push the code to this repository and ensure GitHub Pages is enabled to maintain the connection.
+Deployment: Simply push your changes to the main branch. GitHub Pages will handle the rest.
 
 📱 Connect with Us
 
 Stay updated with daily reflections on our YouTube channel:
 @WOTLdaily
 
-⚖️ License
-
-This project is open-source and available for educational and spiritual purposes.
-
-“Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God.” - Matthew 4:4
+"Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God." - Matthew 4:4
